@@ -37,8 +37,8 @@ Clone the repository and copy the skill folder to your project:
 
 ```bash
 git clone https://github.com/jasongraydon01/claude-security-audit.git
-mkdir -p your-project/.claude/skills
-cp -r claude-security-audit/security-audit your-project/.claude/skills/
+mkdir -p your-project/.claude/skills/security-audit
+cp -r claude-security-audit/security-audit/* your-project/.claude/skills/security-audit/
 ```
 
 After installation, your structure should look like:
@@ -59,11 +59,11 @@ Install globally to use across all projects:
 
 ```bash
 git clone https://github.com/jasongraydon01/claude-security-audit.git
-mkdir -p ~/.claude/skills
-cp -r claude-security-audit/security-audit ~/.claude/skills/
+mkdir -p ~/.claude/skills/security-audit
+cp -r claude-security-audit/security-audit/* ~/.claude/skills/security-audit/
 ```
 
-**Important:** The `security-audit` folder itself must be inside `.claude/skills/`, not just its contents.
+**Note:** Skills must be in their own named folder inside `.claude/skills/`.
 
 ## Usage
 
