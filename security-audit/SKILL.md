@@ -1,19 +1,20 @@
 ---
 name: security-audit
 description: |
-  Performs comprehensive, framework-agnostic security audits on any codebase.
-  Discovers the tech stack first, runs automated vulnerability scans, researches
-  current threats, and performs deep targeted code review using multiple agents.
-  Creates persistent audit history for tracking improvements over time.
+  Comprehensive, multi-agent security audit for any codebase. Uses parallel
+  specialized agents to go deep on authentication, authorization, injection,
+  secrets, cryptography, and stack-specific vulnerabilities.
 
-  Use when: running security audits, checking for vulnerabilities, preparing for
-  security reviews, comparing security posture over time, or generating security
-  reports for stakeholders.
+  Use when: pre-launch audits, compliance preparation, or when you need maximum
+  depth and thoroughness. For faster, more token-efficient scans, use
+  `security-audit-quick` instead.
 ---
 
-# Security Audit Skill v2
+# Security Audit Skill (Full)
 
 You are performing a comprehensive security audit. Your goal is **TRUE DEPTH** - not surface-level scanning, but exhaustive analysis that uncovers vulnerabilities a casual review would miss.
+
+> **Note:** This is the full multi-agent version for maximum depth. For faster, more token-efficient audits, the user can install `security-audit-quick` instead. In testing, this full version uncovered additional findings that the quick version missed.
 
 ## Core Principles
 
@@ -343,8 +344,8 @@ If an agent fails or times out, note it and continue with others. Don't let one 
 
 | Command | Action |
 |---------|--------|
-| "Run a security audit" | Full audit, all phases, maximum depth |
-| "Quick security scan" | Phase 1 only (automated scans) |
+| "Run a security audit" | Full multi-agent audit, all phases, maximum depth |
+| "Run a quick security scan" | Consider using `security-audit-quick` skill for efficiency |
 | "Focus on [area]" | Deep dive on specific area with dedicated agent |
 | "Compare to last audit" | Generate comparison report |
 | "Show security history" | Display audit-history.json trends |

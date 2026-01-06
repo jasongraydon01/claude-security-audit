@@ -1,10 +1,23 @@
-# Security Audit Skill for Claude Code
+# Security Audit Skills for Claude Code
 
-A comprehensive, framework-agnostic security audit skill for Claude Code. Run thorough security audits on any codebase with a simple command.
+Comprehensive, framework-agnostic security audit skills for Claude Code. Run thorough security audits on any codebase with a simple command.
+
+## Two Skill Variants
+
+This repository includes **two versions** of the security audit skill. Choose based on your needs:
+
+| Skill | Best For | Trade-off |
+|-------|----------|-----------|
+| `security-audit` | Pre-launch audits, compliance prep, comprehensive review | More thorough (multi-agent), uses more tokens |
+| `security-audit-quick` | Quick checks, regular scans, CI integration | Faster, more token-efficient (single-pass) |
+
+**In testing, the full multi-agent version uncovered additional findings that the quick version missed.** Both are valid choices depending on your situation - install one or both.
+
+---
 
 ## Overview
 
-This skill enables Claude to perform professional-grade security audits on any codebase. It uses a **discovery-first approach** - detecting your tech stack before applying relevant security patterns, ensuring accurate and relevant findings whether you're running Node.js, Python, Ruby, Go, mobile apps, or anything else.
+These skills enable Claude to perform professional-grade security audits on any codebase. They use a **discovery-first approach** - detecting your tech stack before applying relevant security patterns, ensuring accurate and relevant findings whether you're running Node.js, Python, Ruby, Go, mobile apps, or anything else.
 
 ### Key Features
 
@@ -13,7 +26,7 @@ This skill enables Claude to perform professional-grade security audits on any c
 - **Automated Scanning**: Runs deterministic checks for secrets, vulnerable dependencies, and common vulnerabilities
 - **Current Threat Intelligence**: Searches for recent CVEs and vulnerabilities specific to your stack
 - **AI-Powered Review**: Performs targeted code review based on discovered patterns
-- **Persistent History**: Tracks audit results over time for quarter-over-quarter comparison
+- **Persistent History**: Tracks audit results over time for comparison
 - **Actionable Reports**: Generates executive summaries, detailed findings, and remediation plans
 
 ### What It Detects
@@ -29,28 +42,40 @@ This skill enables Claude to perform professional-grade security audits on any c
 | **Configuration** | Debug mode, missing headers, exposed endpoints |
 | **AI/LLM Security** | Prompt injection, API key exposure, output validation |
 
+---
+
 ## Installation
 
-### Project-Level (Recommended)
+### Option 1: Install Both Skills (Recommended)
 
-Clone the repository and copy the skill folder to your project:
+Clone and copy both skill folders to your project:
 
+```bash
+git clone https://github.com/jasongraydon01/claude-security-audit.git
+
+# Install full (multi-agent) version
+mkdir -p your-project/.claude/skills/security-audit
+cp -r claude-security-audit/security-audit/* your-project/.claude/skills/security-audit/
+
+# Install quick (single-pass) version
+mkdir -p your-project/.claude/skills/security-audit-quick
+cp -r claude-security-audit/security-audit-quick/* your-project/.claude/skills/security-audit-quick/
+```
+
+### Option 2: Install One Skill
+
+**Full version only:**
 ```bash
 git clone https://github.com/jasongraydon01/claude-security-audit.git
 mkdir -p your-project/.claude/skills/security-audit
 cp -r claude-security-audit/security-audit/* your-project/.claude/skills/security-audit/
 ```
 
-After installation, your structure should look like:
-```
-your-project/
-└── .claude/
-    └── skills/
-        └── security-audit/    # <-- The skill folder
-            ├── SKILL.md
-            ├── references/
-            ├── scripts/
-            └── templates/
+**Quick version only:**
+```bash
+git clone https://github.com/jasongraydon01/claude-security-audit.git
+mkdir -p your-project/.claude/skills/security-audit-quick
+cp -r claude-security-audit/security-audit-quick/* your-project/.claude/skills/security-audit-quick/
 ```
 
 ### Global Installation
@@ -59,31 +84,73 @@ Install globally to use across all projects:
 
 ```bash
 git clone https://github.com/jasongraydon01/claude-security-audit.git
+
+# Full version
 mkdir -p ~/.claude/skills/security-audit
 cp -r claude-security-audit/security-audit/* ~/.claude/skills/security-audit/
+
+# Quick version
+mkdir -p ~/.claude/skills/security-audit-quick
+cp -r claude-security-audit/security-audit-quick/* ~/.claude/skills/security-audit-quick/
 ```
 
-**Note:** Skills must be in their own named folder inside `.claude/skills/`.
+### Expected Structure
+
+After installation:
+```
+your-project/
+└── .claude/
+    └── skills/
+        ├── security-audit/           # Full multi-agent version
+        │   ├── SKILL.md
+        │   ├── references/
+        │   ├── scripts/
+        │   └── templates/
+        └── security-audit-quick/     # Quick single-pass version
+            ├── SKILL.md
+            ├── references/
+            ├── scripts/
+            └── templates/
+```
+
+---
 
 ## Usage
 
-Once installed, simply ask Claude to run a security audit:
-
-### Basic Audit
+### Full Audit (Multi-Agent)
 
 ```
 Run a security audit
 ```
 
-Claude will:
-1. Detect your tech stack
-2. Ask grounding questions (first run only)
-3. Run automated scans
-4. Search for current threats
-5. Perform targeted code review
-6. Generate a detailed report
+Claude will spawn multiple specialized agents to deeply analyze:
+- Authentication & session management
+- Authorization & access control
+- Input validation & injection
+- Secrets & configuration
+- Cryptography & data protection
+- Stack-specific vulnerabilities
 
-### Focused Audits
+### Quick Audit (Single-Pass)
+
+```
+Run a quick security scan
+```
+
+Claude will perform a streamlined single-pass audit covering all major security areas efficiently.
+
+### When to Use Each
+
+| Scenario | Recommended Skill |
+|----------|-------------------|
+| Pre-launch security review | `security-audit` (full) |
+| Compliance preparation | `security-audit` (full) |
+| Regular weekly/monthly checks | `security-audit-quick` |
+| Quick sanity check before PR | `security-audit-quick` |
+| Limited token budget | `security-audit-quick` |
+| Found something concerning, need deeper look | `security-audit` (full) |
+
+### Other Commands
 
 ```
 Run a security audit focusing on authentication
@@ -94,12 +161,6 @@ Check for hardcoded secrets
 ```
 
 ```
-Audit our API endpoints for authorization issues
-```
-
-### Comparison and History
-
-```
 Compare this audit to the previous one
 ```
 
@@ -108,14 +169,10 @@ Show our security history
 ```
 
 ```
-Generate an executive summary of security findings
-```
-
-### Remediation
-
-```
 Create a remediation plan for the critical findings
 ```
+
+---
 
 ## What Gets Created
 
@@ -125,13 +182,12 @@ On first run, the skill creates a `.security-audit/` directory in your project:
 .security-audit/
 ├── stack-profile.json      # Detected technology stack
 ├── project-context.json    # Your answers to grounding questions
-├── audit-config.json       # Derived audit configuration
 ├── audit-history.json      # Historical audit data
-├── scan-results/           # Raw scan outputs by date
-│   └── 2025-01-06/
-│       ├── secrets.json
-│       ├── dependencies.json
-│       └── ...
+├── scan-results/           # Raw scan outputs
+│   ├── secrets.json
+│   ├── dependencies.json
+│   ├── auth.json
+│   └── input-flows.json
 └── findings/               # Generated reports
     ├── audit-2025-01-06.md
     └── summary-2025-01-06.md
@@ -139,11 +195,13 @@ On first run, the skill creates a `.security-audit/` directory in your project:
 
 **Note**: Consider adding `.security-audit/` to your `.gitignore` if the findings contain sensitive information.
 
+---
+
 ## Customization
 
 ### Adding Stack-Specific Patterns
 
-Create new files in `security-audit/references/stacks/` following the existing format:
+Create new files in `references/stacks/` following the existing format:
 
 ```markdown
 # FRAMEWORK_NAME.md
@@ -156,18 +214,17 @@ Create new files in `security-audit/references/stacks/` following the existing f
 
 ## Security Features Often Missed
 ...
-
-## Code Patterns to Review
-...
 ```
 
 ### Adjusting Severity
 
-Edit `security-audit/references/SEVERITY_GUIDE.md` to calibrate severity ratings for your organization's risk tolerance.
+Edit `references/SEVERITY_GUIDE.md` to calibrate severity ratings for your organization's risk tolerance.
 
 ### Custom Secret Patterns
 
-Add patterns to `security-audit/scripts/secret_scanner.py` in the `SECRET_PATTERNS` dictionary.
+Add patterns to `scripts/secret_scanner.py` in the `SECRET_PATTERNS` dictionary.
+
+---
 
 ## Requirements
 
@@ -189,31 +246,37 @@ For full dependency scanning, install the appropriate tools:
 
 The skill will note when tools are missing and continue with available scans.
 
+---
+
 ## Limitations
 
-This skill is a powerful aid for security review but is **not a replacement for**:
+These skills are powerful aids for security review but are **not a replacement for**:
 
 - Professional penetration testing
 - Dedicated SAST/DAST tools
 - Security-focused code review by experts
 - Compliance audits
 
-The skill may produce:
+The skills may produce:
 - **False positives**: Patterns that look suspicious but aren't vulnerabilities
 - **False negatives**: Vulnerabilities that don't match known patterns
 - **Context-limited findings**: Complex business logic vulnerabilities may be missed
 
 Always validate findings and consider engaging security professionals for critical applications.
 
+---
+
 ## Security Research Sources
 
-This skill incorporates patterns from:
+These skills incorporate patterns from:
 
 - [OWASP Top 10:2025](https://owasp.org/Top10/)
 - [OWASP Top 10 for LLM Applications 2025](https://genai.owasp.org/)
 - [CWE/SANS Top 25](https://cwe.mitre.org/top25/)
 - Recent CVEs and security advisories
 - Framework-specific security documentation
+
+---
 
 ## Contributing
 
@@ -226,15 +289,11 @@ Ways to contribute:
 - Add new vulnerability patterns
 - Improve documentation
 
+---
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
-
-## Acknowledgments
-
-- OWASP for vulnerability categorization and documentation
-- The security research community for pattern identification
-- Claude Code team for the skills platform
 
 ---
 
@@ -242,8 +301,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 | Command | What It Does |
 |---------|--------------|
-| "Run a security audit" | Full audit with all phases |
-| "Quick security scan" | Automated scans only |
+| "Run a security audit" | Full multi-agent audit (maximum depth) |
+| "Run a quick security scan" | Fast single-pass audit (token-efficient) |
 | "Focus on [area]" | Targeted review of specific area |
 | "Compare to last audit" | Generate comparison report |
 | "Show security history" | Display historical trends |
