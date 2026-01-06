@@ -3,25 +3,26 @@ name: security-audit
 description: |
   Performs comprehensive, framework-agnostic security audits on any codebase.
   Discovers the tech stack first, runs automated vulnerability scans, researches
-  current threats, and performs targeted code review. Creates persistent audit
-  history for tracking improvements over time.
+  current threats, and performs deep targeted code review using multiple agents.
+  Creates persistent audit history for tracking improvements over time.
 
   Use when: running security audits, checking for vulnerabilities, preparing for
   security reviews, comparing security posture over time, or generating security
   reports for stakeholders.
 ---
 
-# Security Audit Skill
+# Security Audit Skill v2
 
-You are performing a comprehensive security audit. Follow these phases in order.
+You are performing a comprehensive security audit. Your goal is **TRUE DEPTH** - not surface-level scanning, but exhaustive analysis that uncovers vulnerabilities a casual review would miss.
 
-## Important Principles
+## Core Principles
 
-1. **Discovery over assumption**: Never assume the tech stack. Discover it first.
-2. **Run scripts, don't read them**: Execute scripts in `scripts/` and use their JSON output.
-3. **Progressive loading**: Only read reference files relevant to the discovered stack.
-4. **Persistence**: Save all findings to `.security-audit/` for historical tracking.
-5. **Current threats**: Always search for recent vulnerabilities before code review.
+1. **Depth over speed**: Take the time to go deep. Spawn agents for parallel deep dives.
+2. **Discovery-first**: Never assume the stack. Discover it, then adapt.
+3. **Multi-agent architecture**: Use Task tool agents for each major review area.
+4. **Exhaustive coverage**: Don't stop at the first finding. Keep looking.
+5. **Current threats**: Search for recent vulnerabilities specific to the discovered stack.
+6. **Persistence**: Save all findings to `.security-audit/` for historical tracking.
 
 ---
 
@@ -37,266 +38,324 @@ Check if `.security-audit/` directory exists in the project root.
    ```bash
    python3 scripts/discover_stack.py
    ```
-   This outputs JSON describing: languages, frameworks, architecture type, databases, deployment patterns, and whether AI/LLM components are present.
 
 2. Ask the user these grounding questions:
    - "What does this application do? (brief description)"
-   - "What sensitive data does it handle? (PII, payments, health data, auth credentials, or none)"
+   - "What sensitive data does it handle? (PII, payments, health data, auth credentials)"
    - "Are there specific security areas you're concerned about?"
-   - "What's your deployment environment? (AWS, GCP, Azure, on-prem, hybrid)"
-   - "Is this a greenfield project or does it have legacy components?"
+   - "What's your deployment environment? (AWS, GCP, Azure, Supabase, Vercel, etc.)"
 
-3. Create the `.security-audit/` directory with:
-   - `stack-profile.json` - Output from discover_stack.py
-   - `project-context.json` - User's answers to grounding questions
-   - `audit-config.json` - Derived configuration (which scans to run, which references to load)
+3. Create `.security-audit/` directory structure:
+   ```
+   .security-audit/
+   ├── stack-profile.json
+   ├── project-context.json
+   ├── audit-history.json
+   ├── scan-results/
+   └── findings/
+   ```
 
 ### Returning Audit
 
-**If `.security-audit/` exists:**
-
-1. Read `stack-profile.json` and `project-context.json`
-2. Check for `findings/` subdirectory
-3. If previous audits exist, ask:
-   "I found a previous audit from [date]. Should I compare against it, or start fresh?"
-4. Re-run `discover_stack.py` to detect any stack changes since last audit
+If `.security-audit/` exists:
+1. Load existing context
+2. Check for previous audits in `findings/`
+3. Ask: "Found previous audit from [date]. Compare against it, or start fresh?"
 
 ---
 
 ## Phase 1: Automated Scanning
 
-Run these scripts based on the discovered stack. All scripts output JSON.
+Run ALL applicable scripts. Save ALL outputs.
 
-### Always Run
+### Execute Scripts
 
-1. **Secret Scanner**
-   ```bash
-   python3 scripts/secret_scanner.py
-   ```
-   Detects: API keys, tokens, passwords, connection strings, private keys.
+```bash
+# Always run these
+python3 scripts/secret_scanner.py > .security-audit/scan-results/secrets.json
+python3 scripts/generate_context.py > .security-audit/scan-results/context.json
+bash scripts/dependency_audit.sh > .security-audit/scan-results/dependencies.json
 
-2. **Dependency Audit**
-   ```bash
-   bash scripts/dependency_audit.sh
-   ```
-   Checks for known vulnerable packages using the appropriate package manager.
+# Run for web apps
+python3 scripts/auth_finder.py > .security-audit/scan-results/auth.json
+python3 scripts/input_flow_tracer.py > .security-audit/scan-results/input-flows.json
+```
 
-### Run Based on Stack
+### Review Scan Results
 
-3. **Auth Finder** (for web applications)
-   ```bash
-   python3 scripts/auth_finder.py
-   ```
-   Identifies unprotected routes and endpoints missing authentication.
-
-4. **Input Flow Tracer** (for apps with user input)
-   ```bash
-   python3 scripts/input_flow_tracer.py
-   ```
-   Traces user input from entry points to usage, flagging unsanitized paths.
-
-### Save Results
-
-Save all scan outputs to `.security-audit/scan-results/[YYYY-MM-DD]/`
+After running scripts, READ the JSON outputs and note:
+- Critical/High findings that need immediate attention
+- Patterns that suggest areas for deep code review
+- False positives to filter out
 
 ---
 
-## Phase 2: Threat Intelligence Update
+## Phase 2: Threat Intelligence (Multi-Agent)
 
-Before code review, search for current threats relevant to the discovered stack.
+**IMPORTANT**: Spawn multiple agents to search in parallel for current threats. Each agent should go DEEP on its assigned area.
 
-### Required Searches
+### Based on discovered stack, spawn agents:
 
-1. Search for recent framework vulnerabilities:
-   - "[primary framework] security vulnerabilities [current year]"
-   - "[primary language] CVE [current year]"
+For EACH major technology detected, spawn a dedicated search agent:
 
-2. Search for supply chain risks:
-   - "Supply chain attacks [package ecosystem] [current year]"
+```
+Example for a Supabase + Expo + React Native app:
 
-3. Search for emerging attack patterns:
-   - "New web application attack techniques [current year]"
+Agent 1: "Search exhaustively for Supabase security vulnerabilities, edge function exploits, RLS bypass techniques, and auth issues from 2024-2025. Include CVEs, blog posts, and disclosed vulnerabilities."
 
-### Conditional Searches
+Agent 2: "Search exhaustively for Expo and React Native security vulnerabilities from 2024-2025. Include AsyncStorage issues, deep linking exploits, and build security."
 
-- If AI/LLM components detected:
-  - "LLM prompt injection vulnerabilities [current year]"
-  - "AI agent security risks [current year]"
+Agent 3: "Search exhaustively for [specific integration] security issues (e.g., Plaid, Stripe, auth providers) from 2024-2025."
+```
 
-- If mobile app detected:
-  - "[iOS/Android] app security bypasses [current year]"
+### Always search for:
+- "[Primary framework] security vulnerabilities [current year]"
+- "[Primary framework] CVE [current year]"
+- "[Database/backend] security bypass [current year]"
+- "Supply chain attacks [package ecosystem] [current year]"
 
-### Use Findings
+### If AI/LLM components detected:
+- "LLM prompt injection vulnerabilities [current year]"
+- "AI agent security exploits [current year]"
 
-Note any relevant vulnerabilities discovered. Look for these patterns specifically during the targeted code review phase.
+### Synthesize threat intel
+Collect all agent findings. Note specific vulnerabilities to look for in Phase 3.
 
 ---
 
-## Phase 3: Targeted Code Review
+## Phase 3: Deep Code Review (Multi-Agent)
 
-Load relevant reference files based on the discovered stack, then review code systematically.
+**THIS IS THE CORE OF THE AUDIT.** Spawn dedicated agents for each security domain. Each agent must go DEEP - trace every path, check every edge case.
 
-### Load References
+### Load References First
 
-Based on `stack-profile.json`, read the appropriate files from `references/`:
+Based on stack-profile.json, read relevant files from `references/`:
+- Always: `OWASP_TOP_10.md`, `SEVERITY_GUIDE.md`
+- For web: `AUTH_PATTERNS.md`, `INPUT_VALIDATION.md`
+- For AI: `AI_LLM_SECURITY.md`
+- Stack-specific: `references/stacks/[RELEVANT_STACK].md`
 
-**Always load:**
-- `references/OWASP_TOP_10.md` - Universal vulnerability patterns
-- `references/SEVERITY_GUIDE.md` - Calibration for severity ratings
+### Spawn Deep-Dive Agents
 
-**Load based on stack:**
-- For web apps: `references/AUTH_PATTERNS.md`, `references/INPUT_VALIDATION.md`
-- For specific frameworks: `references/stacks/[STACK].md`
-- For AI/LLM components: `references/AI_LLM_SECURITY.md`
-- For infrastructure: `references/INFRASTRUCTURE.md`
-- For databases: `references/stacks/DATABASES.md`
+Spawn agents IN PARALLEL using the Task tool. Each agent gets:
+1. The relevant reference file content
+2. Specific files/patterns to review
+3. Clear instruction to be EXHAUSTIVE
 
-### Review Priority Order
+**Agent Prompts (adapt based on stack):**
 
-Review code in this priority order:
+#### Authentication & Session Agent
+```
+You are a security auditor focused ONLY on authentication and session management.
 
-#### 1. Critical Paths (Always Review)
-- **Authentication flows**: Login, logout, password reset, session creation
-- **Authorization checks**: Permission verification, role enforcement, access control
-- **Cryptographic operations**: Hashing, encryption, key generation, token creation
-- **Secret handling**: How credentials and API keys are loaded, stored, transmitted
+Your mission: Find EVERY authentication vulnerability in this codebase.
 
-#### 2. Data-Sensitivity Paths (Based on User Context)
-If user indicated sensitive data handling:
-- **PII handling**: How personal data is collected, stored, transmitted, deleted
-- **Payment flows**: Card handling, transaction processing, PCI compliance
-- **Health data**: HIPAA-relevant data flows
-- **User content**: Upload handling, content storage, access control
+Go DEEP on:
+- Login/logout flows - trace every path
+- Session creation, storage, expiration
+- Token handling (JWT, refresh tokens, API keys)
+- Password reset flows
+- OAuth/SSO implementations
+- Session fixation, hijacking possibilities
+- Auth bypass through parameter manipulation
 
-#### 3. Stack-Specific Risks
-Using the loaded stack reference file, check for:
-- Framework-specific misconfigurations
-- Known dangerous patterns for this stack
+Read these files: [list auth-related files from discovery]
+Reference: [AUTH_PATTERNS.md content]
+
+Be EXHAUSTIVE. Check every auth-related file. Trace every flow. Report ALL findings with file:line references.
+```
+
+#### Authorization & Access Control Agent
+```
+You are a security auditor focused ONLY on authorization and access control.
+
+Your mission: Find EVERY authorization vulnerability - IDOR, privilege escalation, broken access control.
+
+Go DEEP on:
+- Every endpoint/function that accesses user data
+- Check if user ID comes from trusted source (auth) vs untrusted (request body/params)
+- Row-level security policies and their bypasses
+- Admin/role checks - are they consistent?
+- Object references - are they validated against current user?
+- API endpoints - which lack authorization?
+
+Read these files: [list API routes, edge functions, data access layers]
+Reference: [OWASP A01 Broken Access Control patterns]
+
+Be EXHAUSTIVE. This is where IDOR vulnerabilities hide. Check EVERY data access.
+```
+
+#### Input Validation & Injection Agent
+```
+You are a security auditor focused ONLY on input validation and injection vulnerabilities.
+
+Your mission: Find EVERY injection vulnerability - SQL, NoSQL, command, XSS, SSRF.
+
+Go DEEP on:
+- Trace ALL user input from entry to usage
+- SQL/NoSQL query construction
+- Command execution with user data
+- HTML rendering of user content
+- URL fetching with user-controlled URLs
+- File path construction
+- Deserialization of user data
+
+Read these files: [list files with user input handling]
+Reference: [INPUT_VALIDATION.md content]
+
+Be EXHAUSTIVE. Trace every input path to its destination.
+```
+
+#### Secrets & Configuration Agent
+```
+You are a security auditor focused ONLY on secrets and configuration security.
+
+Your mission: Find EVERY exposed secret and misconfiguration.
+
+Go DEEP on:
+- Hardcoded credentials, API keys, tokens
+- Environment variable handling (especially EXPO_PUBLIC_ or similar client-exposed prefixes)
+- Configuration files with sensitive data
+- Secrets in logs, error messages, comments
+- Git history for accidentally committed secrets
+- Debug modes enabled in production configs
+- Missing security headers
+
+Read these files: [list config files, .env files, deployment configs]
+
+Be EXHAUSTIVE. Check every config file, every environment variable usage.
+```
+
+#### Cryptography & Data Protection Agent
+```
+You are a security auditor focused ONLY on cryptography and data protection.
+
+Your mission: Find EVERY cryptographic weakness and data exposure risk.
+
+Go DEEP on:
+- Password hashing (algorithm, salt, rounds)
+- Encryption implementations
+- Key management and storage
+- TLS/HTTPS enforcement
+- Sensitive data in logs
+- PII handling and storage
+- Data retention and deletion
+
+Read these files: [list files with crypto operations, user data handling]
+
+Be EXHAUSTIVE. Weak crypto can undermine everything else.
+```
+
+#### Stack-Specific Agent(s)
+```
+You are a security auditor specialized in [SPECIFIC STACK - e.g., Supabase, React Native, Django].
+
+Your mission: Find vulnerabilities SPECIFIC to this stack that generic checks miss.
+
+Go DEEP on:
+- [Stack-specific patterns from references/stacks/]
+- Framework misconfigurations
+- Known anti-patterns for this stack
 - Security features that should be enabled but aren't
 
-#### 4. Input/Output Boundaries
-- All user input entry points (forms, APIs, file uploads)
-- External API integrations
-- Database query construction
-- Shell command execution
-- File system operations
-- Serialization/deserialization
+Reference: [relevant stack file from references/stacks/]
 
-#### 5. AI/LLM Components (If Detected)
-Using `references/AI_LLM_SECURITY.md`:
-- Prompt construction (injection risks)
-- Model output handling (validation, sanitization)
-- API key management for AI services
-- Multi-tenant isolation in AI features
+Be EXHAUSTIVE. You know this stack - find what others miss.
+```
+
+### Synthesize Agent Findings
+
+After all agents complete:
+1. Collect all findings
+2. Deduplicate (same issue found by multiple agents)
+3. Validate findings (filter false positives)
+4. Assign severity using SEVERITY_GUIDE.md
 
 ---
 
 ## Phase 4: Report Generation
 
-Generate structured findings using the templates.
+### Create Comprehensive Report
 
-### Severity Classification
+Generate findings using `templates/AUDIT_REPORT.md` structure.
 
-Use `references/SEVERITY_GUIDE.md` for calibration:
+**For each finding include:**
+- Location (file:line)
+- Severity (CRITICAL/HIGH/MEDIUM/LOW)
+- Description (what's wrong)
+- Impact (what could happen)
+- Evidence (code snippet)
+- Remediation (specific fix with code)
+- References (CWE, OWASP)
 
-- **CRITICAL**: Actively exploitable, high impact, requires immediate fix
-- **HIGH**: Exploitable with moderate effort, significant impact, fix before production
-- **MEDIUM**: Defense-in-depth issue, moderate impact, address in next sprint
-- **LOW**: Best practice improvement, minimal impact, track for future
-- **STRENGTHS**: Document what's done well to reinforce good patterns
+### Save All Outputs
 
-### Finding Format
+```bash
+# Create timestamped directory
+mkdir -p .security-audit/scan-results/$(date +%Y-%m-%d)
+mkdir -p .security-audit/findings
 
-For each finding, include:
-1. **Location**: File path and line numbers
-2. **Title**: Brief description of the issue
-3. **Severity**: CRITICAL/HIGH/MEDIUM/LOW
-4. **Description**: What the vulnerability is
-5. **Impact**: What could happen if exploited
-6. **Evidence**: Code snippet demonstrating the issue
-7. **Remediation**: Specific fix with code example
-8. **References**: CWE, OWASP category, or CVE if applicable
+# Save scan results (should already be saved from Phase 1)
+# Save main report
+# Save executive summary
+```
 
-### Generate Reports
+**IMPORTANT**: Actually save the files. Don't just describe saving them.
 
-1. **Main Audit Report**
-   Use `templates/AUDIT_REPORT.md` structure.
-   Save to: `.security-audit/findings/audit-[YYYY-MM-DD].md`
+### Generate Comparison (if previous audit exists)
 
-2. **Executive Summary**
-   Use `templates/EXECUTIVE_SUMMARY.md` structure.
-   - Overall risk posture (Critical/High/Medium/Low)
-   - Key statistics (counts by severity)
-   - Top 3 priorities to address
-   Save to: `.security-audit/findings/summary-[YYYY-MM-DD].md`
+Use `templates/COMPARISON_REPORT.md`:
+- New findings
+- Resolved findings
+- Persistent findings
+- Regressions
 
-3. **Comparison Report** (if previous audit exists)
-   Use `templates/COMPARISON_REPORT.md` structure.
-   - New findings (not in previous)
-   - Resolved findings (in previous, not current)
-   - Persistent findings (still present)
-   - Regression findings (were fixed, now returned)
+### Update History
 
-4. **Update History**
-   Append to `.security-audit/audit-history.json`:
-   ```json
-   {
-     "date": "YYYY-MM-DD",
-     "critical": N,
-     "high": N,
-     "medium": N,
-     "low": N,
-     "strengths": N
-   }
-   ```
-
-### Present Results
-
-After generating reports:
-1. Summarize key findings to the user
-2. Highlight the top 3 most important issues to address
-3. Offer to generate a remediation plan using `templates/REMEDIATION_PLAN.md`
-4. If comparing to previous audit, highlight improvements and regressions
+Append to `.security-audit/audit-history.json`:
+```json
+{
+  "date": "YYYY-MM-DD",
+  "critical": N, "high": N, "medium": N, "low": N,
+  "strengths": N
+}
+```
 
 ---
 
 ## Handling Edge Cases
 
-### Missing Tools
-If a required tool isn't available (npm, pip, etc.):
-- Note it in the findings
-- Skip that specific scan
-- Don't fail the entire audit
+### Minimal Codebase
+Focus on: dependency security, configuration review, architecture assessment.
 
-### Empty or New Projects
-If the project has minimal code:
-- Focus on configuration review
-- Check dependency setup
-- Review any authentication scaffolding
-- Note that a full audit should be repeated once more code exists
-
-### Monorepos
-If multiple projects detected:
-- Ask user which project(s) to audit
-- Run discovery separately for each
-- Generate separate reports or a combined report based on preference
+### Monorepo
+Ask which projects to audit. Run discovery on each.
 
 ### Unknown Framework
-If the framework isn't recognized:
-- Use generic patterns from `OWASP_TOP_10.md`
-- Focus on universal vulnerabilities
-- Note specific patterns that should be added to stack references
+Use generic OWASP patterns. Note gaps for future reference additions.
+
+### Agent Failures
+If an agent fails or times out, note it and continue with others. Don't let one failure stop the audit.
 
 ---
 
 ## User Commands
 
-Respond to these variations:
+| Command | Action |
+|---------|--------|
+| "Run a security audit" | Full audit, all phases, maximum depth |
+| "Quick security scan" | Phase 1 only (automated scans) |
+| "Focus on [area]" | Deep dive on specific area with dedicated agent |
+| "Compare to last audit" | Generate comparison report |
+| "Show security history" | Display audit-history.json trends |
+| "Create remediation plan" | Generate prioritized fix roadmap |
 
-- "Run a security audit" - Full audit (all phases)
-- "Run a quick security scan" - Phase 1 only (automated scans)
-- "Focus on authentication security" - Phases 0-1, then targeted auth review
-- "Compare to last audit" - Load previous, run current, generate comparison
-- "Generate executive summary" - If audit exists, generate summary only
-- "Show security history" - Display audit-history.json trends
-- "Create remediation plan" - Generate prioritized fix roadmap from findings
+---
+
+## Remember
+
+- **You are going DEEP, not wide.** Each agent should be exhaustive in its domain.
+- **More agents = more depth.** Spawn as many as the codebase complexity demands.
+- **Save everything.** The user should be able to see all scan results and findings.
+- **Current threats matter.** The web searches should find recent, relevant vulnerabilities.
+- **This should find things a casual review misses.** That's the whole point.
