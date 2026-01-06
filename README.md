@@ -33,11 +33,24 @@ This skill enables Claude to perform professional-grade security audits on any c
 
 ### Project-Level (Recommended)
 
-Clone the repository and copy the skill to your project:
+Clone the repository and copy the skill folder to your project:
 
 ```bash
 git clone https://github.com/jasongraydon01/claude-security-audit.git
+mkdir -p your-project/.claude/skills
 cp -r claude-security-audit/security-audit your-project/.claude/skills/
+```
+
+After installation, your structure should look like:
+```
+your-project/
+└── .claude/
+    └── skills/
+        └── security-audit/    # <-- The skill folder
+            ├── SKILL.md
+            ├── references/
+            ├── scripts/
+            └── templates/
 ```
 
 ### Global Installation
@@ -46,8 +59,11 @@ Install globally to use across all projects:
 
 ```bash
 git clone https://github.com/jasongraydon01/claude-security-audit.git
+mkdir -p ~/.claude/skills
 cp -r claude-security-audit/security-audit ~/.claude/skills/
 ```
+
+**Important:** The `security-audit` folder itself must be inside `.claude/skills/`, not just its contents.
 
 ## Usage
 
