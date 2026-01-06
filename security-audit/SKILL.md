@@ -1,5 +1,5 @@
 ---
-name: security-auditing
+name: security-audit
 description: |
   Performs comprehensive, framework-agnostic security audits on any codebase.
   Discovers the tech stack first, runs automated vulnerability scans, researches

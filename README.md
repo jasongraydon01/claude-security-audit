@@ -36,7 +36,7 @@ This skill enables Claude to perform professional-grade security audits on any c
 Clone the repository and copy the skill to your project:
 
 ```bash
-git clone https://github.com/your-username/claude-security-audit.git
+git clone https://github.com/jasongraydon01/claude-security-audit.git
 cp -r claude-security-audit/security-audit your-project/.claude/skills/
 ```
 
@@ -45,7 +45,7 @@ cp -r claude-security-audit/security-audit your-project/.claude/skills/
 Install globally to use across all projects:
 
 ```bash
-git clone https://github.com/your-username/claude-security-audit.git
+git clone https://github.com/jasongraydon01/claude-security-audit.git
 cp -r claude-security-audit/security-audit ~/.claude/skills/
 ```
 
